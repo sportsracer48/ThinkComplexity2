@@ -118,6 +118,17 @@ class Boid(cone):
         """Returns a vector pointing toward the carrot."""
         toward = carrot.pos - self.pos
         return limit_vector(toward)
+    def clear(self, boids, radius=0.5, angle=0.1):
+        neighbors = self.get_neighbors(boids, radius, angle)
+        if neighbors:
+            v = self.vel
+            vecs = [boid.pos for boid in neighbors]
+            center = self.vector_toward_center(vecs)
+            res = cross(v, center)
+            res.mag = 1
+            return res
+        else:
+            return null_vector
 
     def set_goal(self, boids, carrot):
         """Sets the goal to be the weighted sum of the goal vectors."""
@@ -127,11 +138,13 @@ class Boid(cone):
         w_center = 3
         w_align = 1
         w_love = 10
+        w_clear = 100
 
         self.goal = (w_center * self.center(boids) +
                      w_avoid * self.avoid(boids, carrot) +
                      w_align * self.align(boids) +
-                     w_love * self.love(carrot))
+                     w_love * self.love(carrot)+
+                     w_clear * self.clear(boids))
         self.goal.mag = 1
 
     def move(self, mu=0.1, dt=0.1):
